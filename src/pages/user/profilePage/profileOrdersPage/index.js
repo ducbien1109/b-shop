@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import './style.scss';
+import React, { useEffect, useState } from "react";
+import "./style.scss";
 
 import { useCookies } from "react-cookie";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -7,35 +7,41 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { formatter } from "@Utils/formatter";
 import { toast } from "react-toastify";
 
-import { convertDateTimeFormat } from '@Utils';
+import { convertDateTimeFormat } from "@Utils";
 import queryString from "query-string";
 import { ConfigProvider, Popconfirm } from "antd";
-import { API, IMAGE_URL, POPCONFIRM, PROFILE_PAGE, TAB_LIST_ITEMS, TAB_LIST_TEXT, MESSAGE } from "@Const";
-import { tr } from 'date-fns/locale';
+import {
+  API,
+  IMAGE_URL,
+  POPCONFIRM,
+  PROFILE_PAGE,
+  TAB_LIST_ITEMS,
+  TAB_LIST_TEXT,
+  MESSAGE,
+} from "@Const";
+import { tr } from "date-fns/locale";
 
 const TabList = ({ openTab, setOpenTab }) => {
   return (
     <div className="nav nav-tabs menu-tab" id="myTab" role="tablist">
-      {
-        TAB_LIST_ITEMS.map((tab, index) => (
-          <button
-            key={tab.text}
-            className={`nav-link ${openTab === tab.text ? "active" : ""}`}
-            style={{ marginBottom: "0px" }}
-            role="tab"
-            tabIndex={(openTab === tab.text) ? 0 : -1}
-            onClick={() => setOpenTab(tab.text)}
-          >
-            {tab.text}
-          </button>
-        ))
-      }
+      {TAB_LIST_ITEMS.map((tab, index) => (
+        <button
+          key={tab.text}
+          className={`nav-link ${openTab === tab.text ? "active" : ""}`}
+          style={{ marginBottom: "0px" }}
+          role="tab"
+          tabIndex={openTab === tab.text ? 0 : -1}
+          onClick={() => setOpenTab(tab.text)}
+        >
+          {tab.text}
+        </button>
+      ))}
     </div>
   );
-}
+};
 
 const TabContent = ({ openTab, setOpenTab }) => {
-  const [cookies] = useCookies(['access_token']);
+  const [cookies] = useCookies(["access_token"]);
   const accessToken = cookies.access_token;
   const navigate = useNavigate();
 
@@ -43,20 +49,20 @@ const TabContent = ({ openTab, setOpenTab }) => {
   const queryParams = queryString.parse(location.search);
   const [userID, setUserID] = useState(queryParams.userID);
 
-  const [orderList, setOrderList] = useState([])
+  const [orderList, setOrderList] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const getData = () => {
     const formData = new FormData();
-    formData.append('userID', userID);
-    formData.append('orderStatus', openTab);
+    formData.append("userID", userID);
+    formData.append("orderStatus", openTab);
 
     fetch(API.PUBLIC.GET_ALL_ORDERS_BY_ORDER_STATUS_ENDPOINT, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
       },
-      body: formData
+      body: formData,
     })
       .then((response) => response.json())
       .then((data) => {
@@ -68,7 +74,7 @@ const TabContent = ({ openTab, setOpenTab }) => {
       .finally(() => {
         setLoading(false);
       });
-  }
+  };
 
   useEffect(() => {
     getData();
@@ -76,14 +82,14 @@ const TabContent = ({ openTab, setOpenTab }) => {
 
   function handleCancelOrder(orderID) {
     const formData = new FormData();
-    formData.append('orderID', orderID);
+    formData.append("orderID", orderID);
 
     fetch(API.PUBLIC.CANCEL_ORDER_ENDPOINT, {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
       },
-      body: formData
+      body: formData,
     })
       .then((response) => response.json())
       .then((data) => {
@@ -99,27 +105,30 @@ const TabContent = ({ openTab, setOpenTab }) => {
 
   async function createOnlinePayment(orderID) {
     const formData = new FormData();
-    formData.append('orderID', orderID);
+    formData.append("orderID", orderID);
 
     try {
-      const response = await fetch(`http://localhost:9999/api/update_payment_order`, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          "Authorization": `Bearer ${accessToken}`,
-        },
-      });
+      const response = await fetch(
+        `http://localhost:9999/api/update_payment_order`,
+        {
+          method: "POST",
+          body: formData,
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
-        if (data.status === 'Ok') {
+        if (data.status === "Ok") {
           window.location.href = data.url;
         } else {
           toast.error("Không thể tạo thanh toán trực tuyến. Vui lòng thử lại.");
         }
       } else {
         toast.warn(MESSAGE.PRODUCT_WAS_DELETED);
-        navigate('/');
+        navigate("/");
         const data = await response.json();
         console.log(data.message);
       }
@@ -129,7 +138,7 @@ const TabContent = ({ openTab, setOpenTab }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }
   return (
     <div>
       {orderList && orderList.length ? (
@@ -142,34 +151,53 @@ const TabContent = ({ openTab, setOpenTab }) => {
                   <span className="code">{order.orderID}</span>
                 </div>
                 <div className="status-wrap">
-                  <p className="date">{convertDateTimeFormat(order.orderDate)}</p>
-
-                  {order.orderStatus === TAB_LIST_TEXT.PENDING_CONFIRMATION &&
-                    <div className="status status-un-paid"
+                  <p className="date">
+                    {convertDateTimeFormat(order.orderDate)}
+                  </p>
+                  {order.orderStatus === TAB_LIST_TEXT.PENDING_CONFIRMATION && (
+                    <div
+                      className="status status-un-paid"
                       style={{ backgroundColor: "#ffe39d" }}
-                    >{order.orderStatus}</div>
-                  }
-                  {order.orderStatus === TAB_LIST_TEXT.CONFIRMED &&
-                    <div className="status status-un-paid"
+                    >
+                      {order.orderStatus}
+                    </div>
+                  )}
+                  {order.orderStatus === TAB_LIST_TEXT.CONFIRMED && (
+                    <div
+                      className="status status-un-paid"
                       style={{ backgroundColor: "#b5efa3" }}
-                    >{order.orderStatus}</div>
-                  }
-                  {order.orderStatus === TAB_LIST_TEXT.IN_TRANSIT &&
-                    <div className="status status-un-paid"
+                    >
+                      {order.orderStatus}
+                    </div>
+                  )}
+                  {order.orderStatus === TAB_LIST_TEXT.IN_TRANSIT && (
+                    <div
+                      className="status status-un-paid"
                       style={{ backgroundColor: "#baf6f8" }}
-                    >{order.orderStatus}</div>
-                  }
-                  {order.orderStatus === TAB_LIST_TEXT.COMPLETED &&
-                    <div className="status status-un-paid"
+                    >
+                      {order.orderStatus}
+                    </div>
+                  )}
+                  {order.orderStatus === TAB_LIST_TEXT.COMPLETED && (
+                    <div
+                      className="status status-un-paid"
                       style={{ backgroundColor: "#2fad0c" }}
-                    ><span style={{ color: "white" }}>{order.orderStatus}</span></div>
-                  }
-                  {order.orderStatus === TAB_LIST_TEXT.CANCELLED &&
-                    <div className="status status-un-paid"
+                    >
+                      <span style={{ color: "white" }}>
+                        {order.orderStatus}
+                      </span>
+                    </div>
+                  )}
+                  {order.orderStatus === TAB_LIST_TEXT.CANCELLED && (
+                    <div
+                      className="status status-un-paid"
                       style={{ backgroundColor: "#a68242" }}
-                    ><span style={{ color: "white" }}>{order.orderStatus}</span></div>
-                  }
-
+                    >
+                      <span style={{ color: "white" }}>
+                        {order.orderStatus}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="content-wrap">
@@ -180,14 +208,22 @@ const TabContent = ({ openTab, setOpenTab }) => {
                         <img src={orderDetail.imagePath} alt={""} />
                       </div>
                       <div className="info-wrap">
-                        <Link to={"/product?productID=" + orderDetail.productID}>
+                        <Link
+                          to={"/product?productID=" + orderDetail.productID}
+                        >
                           <div className="name">{orderDetail.productName}</div>
                         </Link>
                         <div className="property-wrap">
-                          <span>{PROFILE_PAGE.PROFILE_ORDERS_PAGE.SIZE} {orderDetail.sizeName}</span>
+                          <span>
+                            {PROFILE_PAGE.PROFILE_ORDERS_PAGE.SIZE}{" "}
+                            {orderDetail.sizeName}
+                          </span>
                         </div>
                         <div className="property-wrap">
-                          <span>{PROFILE_PAGE.PROFILE_ORDERS_PAGE.QUANTITY} {orderDetail.quantity}</span>
+                          <span>
+                            {PROFILE_PAGE.PROFILE_ORDERS_PAGE.QUANTITY}{" "}
+                            {orderDetail.quantity}
+                          </span>
                         </div>
                         <div className="money-wrap">
                           <span>{formatter(orderDetail.totalPrice)}</span>
@@ -199,7 +235,9 @@ const TabContent = ({ openTab, setOpenTab }) => {
               <div className="total-wrap">
                 <div className="total-money">
                   {PROFILE_PAGE.PROFILE_ORDERS_PAGE.TOTAL_AMOUNT}
-                  <span className="money">&nbsp; {formatter(order.totalAmount)}</span>
+                  <span className="money">
+                    &nbsp; {formatter(order.totalAmount)}
+                  </span>
                 </div>
                 {order.orderStatus === TAB_LIST_TEXT.PENDING_CONFIRMATION && (
                   <ConfigProvider
@@ -209,10 +247,10 @@ const TabContent = ({ openTab, setOpenTab }) => {
                     theme={{
                       components: {
                         Button: {
-                          colorPrimary: '#a68242',
-                          colorPrimaryHover: '#dc3636',
-                          colorPrimaryActive: '#b20a0a',
-                          primaryShadow: '0 2px 0 #ffe6e6',
+                          colorPrimary: "#a68242",
+                          colorPrimaryHover: "#dc3636",
+                          colorPrimaryActive: "#b20a0a",
+                          primaryShadow: "0 2px 0 #ffe6e6",
                         },
                       },
                     }}
@@ -224,7 +262,9 @@ const TabContent = ({ openTab, setOpenTab }) => {
                       cancelText={<div>{POPCONFIRM.NO}</div>}
                       onConfirm={() => handleCancelOrder(order.orderID)}
                     >
-                      <button className="cancel-order">{PROFILE_PAGE.PROFILE_ORDERS_PAGE.CANCEL_ORDER}</button>
+                      <button className="cancel-order">
+                        {PROFILE_PAGE.PROFILE_ORDERS_PAGE.CANCEL_ORDER}
+                      </button>
                     </Popconfirm>
                   </ConfigProvider>
                 )}
@@ -233,7 +273,9 @@ const TabContent = ({ openTab, setOpenTab }) => {
                 <div className="content-detail-wrap">
                   <div className="info-order-wrap">
                     <div className="row item-info">
-                      <div className="col-3 label-wrap">{PROFILE_PAGE.PROFILE_ORDERS_PAGE.SHIPPING_ADDRESS}</div>
+                      <div className="col-3 label-wrap">
+                        {PROFILE_PAGE.PROFILE_ORDERS_PAGE.SHIPPING_ADDRESS}
+                      </div>
                       <div className="col-9 text-wrap">
                         <div className="information">
                           <span className="name">{order.recipientName}</span>
@@ -246,18 +288,32 @@ const TabContent = ({ openTab, setOpenTab }) => {
                       </div>
                     </div>
                     <div className="row item-info">
-                      <div className="col-3 label-wrap">{PROFILE_PAGE.PROFILE_ORDERS_PAGE.PAYMENT_METHOD}</div>
-                      {order.payment === 'Thanh toán online' ? (
+                      <div className="col-3 label-wrap">
+                        {PROFILE_PAGE.PROFILE_ORDERS_PAGE.PAYMENT_METHOD}
+                      </div>
+                      {order.payment === "Thanh toán online" ? (
                         <>
-                          <div className="col-9 text-wrap" style={{ color: "#2fad0c", fontWeight: "bold" }}>{PROFILE_PAGE.PROFILE_ORDERS_PAGE.CASH_ON_DELIVERY_ONLINE}</div>
+                          <div
+                            className="col-9 text-wrap"
+                            style={{ color: "#2fad0c", fontWeight: "bold" }}
+                          >
+                            {
+                              PROFILE_PAGE.PROFILE_ORDERS_PAGE
+                                .CASH_ON_DELIVERY_ONLINE
+                            }
+                          </div>
                         </>
                       ) : (
                         <>
-                          <div className="col-9 text-wrap">{PROFILE_PAGE.PROFILE_ORDERS_PAGE.CASH_ON_DELIVERY}</div>
-                          <button className="btn btn-danger cart__bill__total" onClick={() => createOnlinePayment(order.orderID)}>
+                          <div className="col-9 text-wrap">
+                            {PROFILE_PAGE.PROFILE_ORDERS_PAGE.CASH_ON_DELIVERY}
+                          </div>
+                          <button
+                            className="btn btn-danger cart__bill__total"
+                            onClick={() => createOnlinePayment(order.orderID)}
+                          >
                             Thanh toán online
                           </button>
-
                         </>
                       )}
                     </div>
@@ -277,7 +333,7 @@ const TabContent = ({ openTab, setOpenTab }) => {
       )}
     </div>
   );
-}
+};
 
 const ProfileOrdersPage = () => {
   const [openTab, setOpenTab] = useState(TAB_LIST_TEXT.ALL);
@@ -295,6 +351,6 @@ const ProfileOrdersPage = () => {
       </div>
     </div>
   );
-}
+};
 
 export default ProfileOrdersPage;
